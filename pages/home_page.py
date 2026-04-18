@@ -1,6 +1,7 @@
 from selenium.webdriver.common.by import By
 from pages.base_page import BasePage
 import allure
+import time
 
 class HomePage(BasePage):
     # Локаторы кнопок заказа
@@ -40,10 +41,8 @@ class HomePage(BasePage):
 
     def click_order_button_bottom(self):
         with allure.step("Нажать кнопку 'Заказать' внизу страницы"):
-            # Прокручиваем к кнопке
             button = self.wait_for_clickable(self.ORDER_BUTTON_BOTTOM)
             self.driver.execute_script("arguments[0].scrollIntoView(true);", button)
-            import time
             time.sleep(1)
             self.driver.execute_script("arguments[0].click();", button)
 
@@ -53,7 +52,6 @@ class HomePage(BasePage):
             if locator:
                 element = self.find_element(locator)
                 self.driver.execute_script("arguments[0].scrollIntoView(true);", element)
-                import time
                 time.sleep(0.5)
                 self.driver.execute_script("arguments[0].click();", element)
 
@@ -67,7 +65,6 @@ class HomePage(BasePage):
 
     def click_samokat_logo(self):
         with allure.step("Нажать на логотип Самоката"):
-            import time
             time.sleep(2)
             self.click_with_scroll(self.SAMOKAT_LOGO)
 
@@ -76,5 +73,30 @@ class HomePage(BasePage):
             element = self.wait_for_clickable(self.YANDEX_LOGO)
             element.click()
 
+    def click_yandex_logo_and_switch_to_new_window(self):
+        """
+        Нажать на логотип Яндекса и переключиться на новое окно
+        """
+        with allure.step("Нажать на логотип Яндекса и переключиться на новое окно"):
+            original_window = self.driver.current_window_handle
+            element = self.wait_for_clickable(self.YANDEX_LOGO)
+            element.click()
+            time.sleep(2)
+            
+            for window in self.driver.window_handles:
+                if window != original_window:
+                    self.driver.switch_to.window(window)
+                    break
+
     def get_current_url(self):
-        return self.driver.current_url
+        with allure.step("Получить текущий URL"):
+            return self.driver.current_url
+
+    def get_current_window_url(self):
+        with allure.step("Получить URL текущего окна"):
+            return self.driver.current_url
+
+    def close_current_window_and_switch_back(self, original_window):
+        with allure.step("Закрыть текущее окно и вернуться к исходному"):
+            self.driver.close()
+            self.driver.switch_to.window(original_window)
