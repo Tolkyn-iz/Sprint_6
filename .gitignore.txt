@@ -42,14 +42,15 @@ allure_report/
 
 # Selenium
 geckodriver.log
-geckodriver.exe
-chromedriver.exe
 
 # Pytest
 .pytest_cache/
 .tox/
 .coverage
 htmlcov/
+
+# Environment variables
+.env
 
 # Logs
 *.log
