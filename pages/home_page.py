@@ -1,7 +1,7 @@
 from selenium.webdriver.common.by import By
 from pages.base_page import BasePage
 import allure
-import time
+
 
 class HomePage(BasePage):
     # Локаторы кнопок заказа
@@ -35,68 +35,39 @@ class HomePage(BasePage):
     SAMOKAT_LOGO = (By.XPATH, "//a[contains(@href, '/')]//img[contains(@alt, 'Scooter')]")
     YANDEX_LOGO = (By.XPATH, "//a[@class='Header_LogoYandex__3TSOI']")
 
+    @allure.step("Нажать кнопку 'Заказать' вверху страницы")
     def click_order_button_top(self):
-        with allure.step("Нажать кнопку 'Заказать' вверху страницы"):
-            self.click_with_scroll(self.ORDER_BUTTON_TOP)
+        self.click_with_scroll(self.ORDER_BUTTON_TOP)
 
+    @allure.step("Нажать кнопку 'Заказать' внизу страницы")
     def click_order_button_bottom(self):
-        with allure.step("Нажать кнопку 'Заказать' внизу страницы"):
-            button = self.wait_for_clickable(self.ORDER_BUTTON_BOTTOM)
-            self.driver.execute_script("arguments[0].scrollIntoView(true);", button)
-            time.sleep(1)
-            self.driver.execute_script("arguments[0].click();", button)
+        button = self.wait_for_clickable(self.ORDER_BUTTON_BOTTOM)
+        self.scroll_to_element(button)
+        self.click_by_js(button)
 
+    @allure.step("Нажать на вопрос")
     def click_question(self, index):
-        with allure.step(f"Нажать на вопрос {index}"):
-            locator = self.QUESTIONS.get(index)
-            if locator:
-                element = self.find_element(locator)
-                self.driver.execute_script("arguments[0].scrollIntoView(true);", element)
-                time.sleep(0.5)
-                self.driver.execute_script("arguments[0].click();", element)
+        locator = self.QUESTIONS.get(index)
+        if locator:
+            element = self.find_element(locator)
+            self.scroll_to_element(element)
+            self.click_by_js(element)
 
+    @allure.step("Получить текст ответа")
     def get_answer_text(self, index):
-        with allure.step(f"Получить текст ответа на вопрос {index}"):
-            locator = self.ANSWERS.get(index)
-            if locator:
-                element = self.wait_for_visibility(locator)
-                return element.text
-            return ""
+        locator = self.ANSWERS.get(index)
+        if locator:
+            element = self.wait_for_visibility(locator)
+            return element.text
+        return ""
 
+    @allure.step("Нажать на логотип Самоката")
     def click_samokat_logo(self):
-        with allure.step("Нажать на логотип Самоката"):
-            time.sleep(2)
-            self.click_with_scroll(self.SAMOKAT_LOGO)
+        element = self.wait_for_clickable(self.SAMOKAT_LOGO)
+        self.click_by_js(element)
 
-    def click_yandex_logo(self):
-        with allure.step("Нажать на логотип Яндекса"):
-            element = self.wait_for_clickable(self.YANDEX_LOGO)
-            element.click()
-
+    @allure.step("Нажать на логотип Яндекса и переключиться на новое окно")
     def click_yandex_logo_and_switch_to_new_window(self):
-        """
-        Нажать на логотип Яндекса и переключиться на новое окно
-        """
-        with allure.step("Нажать на логотип Яндекса и переключиться на новое окно"):
-            original_window = self.driver.current_window_handle
-            element = self.wait_for_clickable(self.YANDEX_LOGO)
-            element.click()
-            time.sleep(2)
-            
-            for window in self.driver.window_handles:
-                if window != original_window:
-                    self.driver.switch_to.window(window)
-                    break
-
-    def get_current_url(self):
-        with allure.step("Получить текущий URL"):
-            return self.driver.current_url
-
-    def get_current_window_url(self):
-        with allure.step("Получить URL текущего окна"):
-            return self.driver.current_url
-
-    def close_current_window_and_switch_back(self, original_window):
-        with allure.step("Закрыть текущее окно и вернуться к исходному"):
-            self.driver.close()
-            self.driver.switch_to.window(original_window)
+        element = self.wait_for_clickable(self.YANDEX_LOGO)
+        element.click()
+        self.switch_to_new_window()

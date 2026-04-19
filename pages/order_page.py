@@ -1,8 +1,9 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import expected_conditions as EC
 from pages.base_page import BasePage
 import allure
-import time
+
 
 class OrderPage(BasePage):
     # Форма "Для кого самокат"
@@ -24,96 +25,81 @@ class OrderPage(BasePage):
     
     # Куки-баннер
     COOKIE_CLOSE_BUTTON = (By.XPATH, "//button[text()='да все привыкли']")
+    
+    # Локатор для станции метро в выпадающем списке
+    STATION_OPTION = (By.XPATH, "//div[contains(@class, 'Order_Text')]")
 
+    @allure.step("Закрыть куки-баннер")
     def close_cookie_banner(self):
-        with allure.step("Закрыть куки-баннер"):
-            try:
-                time.sleep(1)
-                close_button = self.driver.find_element(*self.COOKIE_CLOSE_BUTTON)
-                if close_button.is_displayed():
-                    close_button.click()
-                    time.sleep(0.5)
-            except:
-                pass
+        try:
+            close_button = self.driver.find_element(*self.COOKIE_CLOSE_BUTTON)
+            if close_button.is_displayed():
+                close_button.click()
+        except:
+            pass
 
+    @allure.step("Заполнить первую форму")
     def fill_first_form(self, name, surname, address, metro_station, phone):
-        with allure.step(f"Заполнить первую форму"):
-            self.close_cookie_banner()
-            
-            self.wait_for_visibility(self.NAME_INPUT).send_keys(name)
-            self.driver.find_element(*self.SURNAME_INPUT).send_keys(surname)
-            self.driver.find_element(*self.ADDRESS_INPUT).send_keys(address)
-            
-            metro_input = self.driver.find_element(*self.METRO_STATION_INPUT)
-            metro_input.click()
-            time.sleep(0.5)
-            metro_input.clear()
-            metro_input.send_keys(metro_station)
-            time.sleep(1.5)
-            
-            for i in range(5):
-                try:
-                    station = self.driver.find_element(By.XPATH, "//div[contains(@class, 'Order_Text')]")
-                    if station.is_displayed():
-                        station.click()
-                        break
-                except:
-                    time.sleep(0.5)
-            
-            self.driver.find_element(*self.PHONE_INPUT).send_keys(phone)
-            time.sleep(0.5)
+        self.close_cookie_banner()
+        
+        self.send_keys(self.NAME_INPUT, name)
+        self.send_keys(self.SURNAME_INPUT, surname)
+        self.send_keys(self.ADDRESS_INPUT, address)
+        
+        # Выбор станции метро
+        metro_input = self.find_element(self.METRO_STATION_INPUT)
+        metro_input.click()
+        metro_input.send_keys(metro_station)
+        
+        # Явное ожидание появления списка станций
+        self.wait.until(EC.visibility_of_element_located(self.STATION_OPTION))
+        station = self.find_element(self.STATION_OPTION)
+        station.click()
+        
+        self.send_keys(self.PHONE_INPUT, phone)
 
+    @allure.step("Нажать Далее")
     def click_next(self):
-        with allure.step("Нажать Далее"):
-            next_button = self.driver.find_element(*self.NEXT_BUTTON)
-            next_button.click()
-            time.sleep(3)
-            self.wait_for_visibility(self.DELIVERY_DATE_INPUT)
+        next_button = self.find_element(self.NEXT_BUTTON)
+        next_button.click()
+        self.wait.until(EC.visibility_of_element_located(self.DELIVERY_DATE_INPUT))
 
+    @allure.step("Заполнить вторую форму")
     def fill_second_form(self, delivery_date, rental_period, color, comment):
-        with allure.step(f"Заполнить вторую форму"):
-            date_input = self.driver.find_element(*self.DELIVERY_DATE_INPUT)
-            date_input.click()
-            date_input.clear()
-            date_input.send_keys(delivery_date)
-            date_input.send_keys(Keys.ENTER)
-            time.sleep(0.5)
-            
-            dropdown = self.driver.find_element(*self.RENTAL_PERIOD_DROPDOWN)
-            dropdown.click()
-            time.sleep(0.5)
-            period_option = self.driver.find_element(By.XPATH, f"//div[@class='Dropdown-option' and text()='{rental_period}']")
-            period_option.click()
-            time.sleep(0.5)
-            
-            if color == "black":
-                self.driver.find_element(*self.COLOR_BLACK).click()
-            else:
-                self.driver.find_element(*self.COLOR_GREY).click()
-            time.sleep(0.5)
-            
-            self.driver.find_element(*self.COMMENT_INPUT).send_keys(comment)
-            time.sleep(0.5)
+        # Дата
+        date_input = self.find_element(self.DELIVERY_DATE_INPUT)
+        date_input.click()
+        date_input.clear()
+        date_input.send_keys(delivery_date)
+        date_input.send_keys(Keys.ENTER)
+        
+        # Период аренды
+        dropdown = self.find_element(self.RENTAL_PERIOD_DROPDOWN)
+        dropdown.click()
+        period_option = (By.XPATH, f"//div[@class='Dropdown-option' and text()='{rental_period}']")
+        self.wait.until(EC.element_to_be_clickable(period_option)).click()
+        
+        # Цвет
+        if color == "black":
+            self.find_element(self.COLOR_BLACK).click()
+        else:
+            self.find_element(self.COLOR_GREY).click()
+        
+        # Комментарий
+        self.send_keys(self.COMMENT_INPUT, comment)
 
+    @allure.step("Нажать Заказать")
     def click_order_button(self):
-        with allure.step("Нажать Заказать"):
-            order_button = self.driver.find_element(*self.ORDER_BUTTON)
-            self.driver.execute_script("arguments[0].scrollIntoView(true);", order_button)
-            time.sleep(1)
-            order_button.click()
-            time.sleep(2)
+        order_button = self.find_element(self.ORDER_BUTTON)
+        self.scroll_to_element(order_button)
+        order_button.click()
 
+    @allure.step("Подтвердить заказ")
     def confirm_order(self):
-        with allure.step("Подтвердить заказ"):
-            time.sleep(2)
-            try:
-                confirm_button = self.wait_for_clickable(self.CONFIRM_BUTTON)
-                confirm_button.click()
-            except:
-                confirm_button = self.driver.find_element(By.XPATH, "//button[contains(@class, 'Button_Button') and text()='Да']")
-                confirm_button.click()
-            time.sleep(3)
+        confirm_button = self.wait.until(EC.element_to_be_clickable(self.CONFIRM_BUTTON))
+        confirm_button.click()
 
+    @allure.step("Создать заказ")
     def create_order(self, name, surname, address, metro_station, phone, 
                      delivery_date, rental_period, color, comment):
         self.fill_first_form(name, surname, address, metro_station, phone)
