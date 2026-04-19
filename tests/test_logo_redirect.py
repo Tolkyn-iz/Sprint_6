@@ -21,6 +21,4 @@ class TestLogoRedirect:
         home_page.click_yandex_logo_and_switch_to_new_window()
         
         with allure.step("Проверить, что открылся Дзен"):
-            current_url = home_page.get_current_url()
-            assert "dzen.ru" in current_url or "yandex" in current_url, \
-                f"Ожидался Дзен, получен URL: {current_url}"
+            assert "dzen.ru" in home_page.get_current_url() or "yandex" in home_page.get_current_url()

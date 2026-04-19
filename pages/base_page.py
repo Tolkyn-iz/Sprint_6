@@ -47,3 +47,9 @@ class BasePage:
             if window != original_window:
                 self.driver.switch_to.window(window)
                 break
+
+    @allure.step("Ввести текст в поле")
+    def send_keys(self, locator, text):
+        element = self.wait_for_visibility(locator)
+        element.clear()
+        element.send_keys(text)
